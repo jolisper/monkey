@@ -8,12 +8,28 @@ import (
 	"github.com/jolisper/monkey/token"
 )
 
+type (
+	prefixParserFn func() ast.Expression
+	infixParserFn  func(ast.Expression) ast.Expression
+)
+
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParserFn) {
+	p.prefixParserFns[tokenType] = fn
+}
+
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParserFn) {
+	p.infixParserFns[tokenType] = fn
+}
+
 type Parser struct {
 	l      *lexer.Lexer
 	errors []string
 
 	curToken  token.Token
 	peekToken token.Token
+
+	prefixParserFns map[token.TokenType]prefixParserFn
+	infixParserFns  map[token.TokenType]infixParserFn
 }
 
 func New(l *lexer.Lexer) *Parser {
