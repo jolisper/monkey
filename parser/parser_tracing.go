@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -21,12 +22,16 @@ func incIdent() { traceLevel = traceLevel + 1 }
 func decIdent() { traceLevel = traceLevel - 1 }
 
 func trace(msg string) string {
-	incIdent()
-	tracePrint("BEGIN " + msg)
+	if os.Getenv("MONKEY_PARSER_TRACING_ON") != "" {
+		incIdent()
+		tracePrint("BEGIN " + msg)
+	}
 	return msg
 }
 
 func untrace(msg string) {
-	tracePrint("END " + msg)
-	decIdent()
+	if os.Getenv("MONKEY_PARSER_TRACING_ON") != "" {
+		tracePrint("END " + msg)
+		decIdent()
+	}
 }
