@@ -73,6 +73,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpresion)
+	p.registerPrefix(token.IF, p.parseIfExpression)
 
 	p.infixParserFns = make(map[token.TokenType]infixParserFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -276,6 +277,58 @@ func (p *Parser) parseGroupedExpresion() ast.Expression {
 	return exp
 }
 
+func (p *Parser) parseIfExpression() ast.Expression {
+	expression := &ast.IfExpression{Token: p.curToken}
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+
+	// Move to condition
+	p.nextToken()
+	expression.Condition = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	expression.Consequence = p.parseBlockStatement()
+
+	if p.peekTokenIs(token.ELSE) {
+		p.nextToken()
+
+		if !p.expectPeek(token.LBRACE) {
+			return nil
+		}
+
+		expression.Alternative = p.parseBlockStatement()
+	}
+
+	return expression
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	block := &ast.BlockStatement{Token: p.curToken}
+	block.Statements = []ast.Statement{}
+
+	p.nextToken()
+
+	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
+		stmt := p.parseStatement()
+
+		if stmt != nil {
+			block.Statements = append(block.Statements, stmt)
+		}
+		p.nextToken()
+	}
+
+	return block
+}
+
 // Helpers:
 
 func (p *Parser) curTokenIs(t token.TokenType) bool {
@@ -302,8 +355,8 @@ func (p *Parser) peekPrecedence() int {
 	return LOWEST
 }
 
-// Their primary purpose is to enforce the correctness of the order of tokens
-// by checking the type of the next token.
+// Their primary purpose is to enforce the correctness of the order of
+// tokens by checking the type of the next token.
 func (p *Parser) expectPeek(t token.TokenType) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()
