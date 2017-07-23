@@ -73,7 +73,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
-	p.registerPrefix(token.LPAREN, p.parseGroupedExpresion)
+	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 
@@ -216,7 +216,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 // Prefix and infix type functions:
 
 func (p *Parser) parsePrefixExpression() ast.Expression {
-	defer untrace(trace("parsePrefixExpression"))
+	defer untrace(trace("parsePrefixExpression: " + p.curToken.Literal))
 
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,
@@ -231,7 +231,7 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 }
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
-	defer untrace(trace("parseInfixExpression"))
+	defer untrace(trace("parseInfixExpression: " + p.curToken.Literal))
 
 	expression := &ast.InfixExpression{
 		Token:    p.curToken,
@@ -252,7 +252,7 @@ func (p *Parser) parseIdentifier() ast.Expression {
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
-	defer untrace(trace("parseIntegerLiteral"))
+	defer untrace(trace("parseIntegerLiteral: " + p.curToken.Literal))
 
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
@@ -272,7 +272,8 @@ func (p *Parser) parseBoolean() ast.Expression {
 	return &ast.Boolean{Token: p.curToken, Value: p.curTokenIs(token.TRUE)}
 }
 
-func (p *Parser) parseGroupedExpresion() ast.Expression {
+func (p *Parser) parseGroupedExpression() ast.Expression {
+	defer untrace(trace("parseGroupedExpression: " + p.curToken.Literal))
 	p.nextToken()
 
 	exp := p.parseExpression(LOWEST)
