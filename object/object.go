@@ -38,7 +38,7 @@ func (b *Boolean) Type() ObjectType {
 }
 
 func (b *Boolean) Inspect() string {
-	return fmt.Sprintf("%b", b.Value)
+	return fmt.Sprintf("%t", b.Value)
 }
 
 // Null object
